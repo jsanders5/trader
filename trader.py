@@ -123,7 +123,7 @@ def invest(trader, symbol='', investment_USD=''):
 
         max_currency_qty = get_available_balance(trader, currency)
 
-        investment_USD = input("Quantity (max = {:.10f} {}): ".format(max_currency_qty, currency.upper()))
+        investment_USD = input("Amount of {} invest (max = {:.10f} {}): ".format(currency.upper(), max_currency_qty, currency.upper()))
         if(investment_USD == 'max' or investment_USD == ''):
             investment_USD=max_currency_qty
         else:
@@ -263,6 +263,9 @@ def parse(arg):
     'Convert a series of zero or more numbers to an argument tuple'
     return tuple(map(str, arg.split()))
 
+def quit():
+    sys.exit()
+
 class TradeShell(cmd.Cmd):
     intro = 'Welcome to the trading shell.   Type help or ? to list commands.\n'
     prompt = '$ '
@@ -284,11 +287,11 @@ class TradeShell(cmd.Cmd):
         history(self.trader, *parse(arg))
 
     def do_holdings(self, arg):
-        'holdings'# [SYMBOL]'
+        'holdings'
         holdings(self.trader, arg)
 
     def do_active(self, arg):
-        'active'# [SYMBOL]'
+        'active'
         active(self.trader, arg)
 
     def do_symbols(self, arg):
@@ -297,18 +300,15 @@ class TradeShell(cmd.Cmd):
         print(self.trader.client.symbols())
 
     def do_invest(self, arg):
-        'invest SYMBOL quantity'
-        click.echo('do_invest')
+        'invest SYMBOL [total_investment]'
         invest(self.trader, *parse(arg))
 
     def do_buy(self, arg):
-        'buy SYMBOL total_investment_SYMBOL'
-        click.echo('do_buy')
+        'buy SYMBOL [quantity]'
         buy(self.trader, *parse(arg))
 
     def do_sell(self, arg):
-        'sell SYMBOL qty'
-        click.echo('do_sell')
+        'sell SYMBOL [quantity]'
         sell(self.trader, *parse(arg))
 
 
