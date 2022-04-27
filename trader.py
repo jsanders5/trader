@@ -94,7 +94,7 @@ def propose_trade(trader, symbol, trade_type, investment_USD='', quantity=''):
         input_str = "" + trade_type +' '+ "{:,.8f}".format(quantity) +' '+ symbol[0:3].upper() +' '+ "@" +' '+ "${:,.2f}".format(price) +" for " + "${:,.2f} ".format(investment_plus_fee_USD) + "?" + " Y/N? "
         confirm = input(input_str)
 
-    return confirm
+    return confirm, price
 
 
 def get_available_balance(trader, currency):
@@ -134,11 +134,14 @@ def invest(trader, symbol='', investment_USD=''):
                 print("Invalid quantity.")
                 return
 
-    confirm = propose_trade(trader, symbol, "buy", investment_USD)
+    confirm, price = propose_trade(trader, symbol, "buy", investment_USD)
+
+    amount_SYM = investment_USD/price
 
     if confirm == 'Y':
+        print("Placing Order {:.6f} for ${:.2f}...".format(amount_SYM, price))
+        print(trader.client.new_order(symbol, "{:.6f}".format(amount_SYM),"{:.2f}".format(price), "buy", options=["maker-or-cancel"]))
         print("Order Placed")
-        print(trader.client.new_order(symbol, "{:.8f}".format(amount_SYM),"{:.2f}".format(price), "buy", options=["maker-or-cancel"]))
         print("----------")
     else:
         print("Goodbye.")
@@ -164,6 +167,7 @@ def buy(trader, symbol='', quantity=''):
         max_currency_qty = get_available_balance(trader, currency)
 
         # 2) Get recommended price
+        # TODO: The price snapshot is taken here, then again in 'propose_trade()'
         price = trader.get_recommended_price(symbol, "buy")
 
         # 3) Get approximate quantity of "commodity"
@@ -180,11 +184,13 @@ def buy(trader, symbol='', quantity=''):
                 print("Invalid quantity.")
                 return
 
-    confirm = propose_trade(trader, symbol, "buy", quantity=quantity)
+    confirm, price = propose_trade(trader, symbol, "buy", quantity=quantity)
+    #amount_SYM = investment_USD/p rice
 
     if confirm == 'Y':
+        print("Placing Order {:.6f} for ${:.2f}...".format(quantity, price))
+        print(trader.client.new_order(symbol, "{:.6f}".format(quantity),"{:.2f}".format(price), "buy", options=["maker-or-cancel"]))
         print("Order Placed")
-        print(trader.client.new_order(symbol, "{:.8f}".format(amount_SYM),"{:.2f}".format(price), "buy", options=["maker-or-cancel"]))
         print("----------")
     else:
         print("Goodbye.")
@@ -254,9 +260,11 @@ def history(trader, symbol='', n=1):
         print("Invalid symbol", symbol)
         return
 
-    if int(n) > 0:
-        for m in range(int(n)):
-            print(json.dumps(trader.client.get_past_trades(symbol)[m], indent=4, sort_keys=True))
+    hist = trader.client.get_past_trades(symbol)
+    if hist:
+        if int(n) > 0:
+            for m in range(int(n)):
+                print(json.dumps(hist[m], indent=4, sort_keys=True))
     return
 
 def parse(arg):
